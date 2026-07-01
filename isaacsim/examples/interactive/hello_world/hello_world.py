@@ -9,9 +9,8 @@
 
 from isaacsim.examples.interactive.base_sample import BaseSample
 import numpy as np
-
-# Note: checkout the required tutorials at https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html
 from isaacsim.core.api.objects import DynamicCuboid
+import carb
 
 class HelloWorld(BaseSample):
     def __init__(self) -> None:
@@ -19,13 +18,12 @@ class HelloWorld(BaseSample):
         return
 
     def setup_scene(self):
-
         world = self.get_world()
         world.scene.add_default_ground_plane()
 
         fancy_cube = world.scene.add(
             DynamicCuboid(
-                prim_path="/World/random_cube",
+                prim_path="/World/fancy_cube",
                 name="fancy_cube",
                 position=np.array([0.0, 0.0, 1.0]),
                 scale= np.array([0.5, 0.5, 0.5]),
@@ -35,6 +33,14 @@ class HelloWorld(BaseSample):
         return
 
     async def setup_post_load(self):
+        self._world = self.get_world()
+        self._cube = self._world.scene.get_object("fancy_cube")
+        position, orientation = self._cube.get_world_pose()
+        linear_velocity = self._cube.get_linear_velocity()
+
+        print("Cube Position: " + str(position))
+        print("Cube Orientation: " + str(orientation))
+        print("Cube Linear Velocity: " + str(linear_velocity))
         return
 
     async def setup_pre_reset(self):
