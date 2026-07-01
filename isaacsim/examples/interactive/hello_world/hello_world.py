@@ -8,8 +8,10 @@
 #
 
 from isaacsim.examples.interactive.base_sample import BaseSample
+import numpy as np
 
 # Note: checkout the required tutorials at https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html
+from isaacsim.core.api.objects import DynamicCuboid
 
 class HelloWorld(BaseSample):
     def __init__(self) -> None:
@@ -21,6 +23,15 @@ class HelloWorld(BaseSample):
         world = self.get_world()
         world.scene.add_default_ground_plane()
 
+        fancy_cube = world.scene.add(
+            DynamicCuboid(
+                prim_path="/World/random_cube",
+                name="fancy_cube",
+                position=np.array([0.0, 0.0, 1.0]),
+                scale= np.array([0.5, 0.5, 0.5]),
+                color=np.array([1.0, 0.0, 0.0]),
+            )
+        )
         return
 
     async def setup_post_load(self):
