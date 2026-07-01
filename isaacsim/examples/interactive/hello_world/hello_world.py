@@ -1,7 +1,9 @@
 from isaacsim.examples.interactive.base_sample import BaseSample
+from isaacsim.core.utils.types import ArticulationAction
 from isaacsim.core.utils.nucleus import get_assets_root_path
 from isaacsim.core.utils.stage import add_reference_to_stage
 from isaacsim.core.api.robots import Robot
+import numpy as np
 import carb
 
 class HelloWorld(BaseSample):
@@ -28,16 +30,24 @@ class HelloWorld(BaseSample):
             )
         )
 
-        print(str(jetbot_01.num_dof))
         return
 
     async def setup_post_load(self):
         self._world = self.get_world()
         self._jetbot_01 = self._world.scene.get_object("jetbot_01")
         
-        print(str(self._jetbot_01.num_dof))
-        print(str(self._jetbot_01.get_joint_positions()))
+        self._jetbot_01_articulation_controller = self._jetbot_01.get_articulation_controller()
+        self._world.add_physics_callback("sending_actions", callback_fn=self.send_robot_actions)
         return
+    
+    def send_robot_actions(self, step_size):
+        self._jetbot_01_articulation_controller.apply_action(
+            ArticulationAction(
+                joint_positions=None,
+                joint_efforts=None,
+                joint_velocities=np.array([5, 5])
+            )
+        )
 
     async def setup_pre_reset(self):
         return
