@@ -22,11 +22,30 @@ class HelloWorld(BaseSample):
             
         asset_path = assets_root_path + "/Isaac/Robots/Jetbot/jetbot.usd"
         add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_01")
+        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_02")
+        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_03")
 
         jetbot_01 = world.scene.add(
             Robot(
                 prim_path="/World/jetbot_01",
                 name="jetbot_01",
+                position=np.array([0.0, -1.0, 0.1]),
+            )
+        )
+
+        jetbot_02 = world.scene.add(
+            Robot(
+                prim_path="/World/jetbot_02",
+                name="jetbot_02",
+                position=np.array([0.0, 0.0, 0.1]),
+            )
+        )
+
+        jetbot_03 = world.scene.add(
+            Robot(
+                prim_path="/World/jetbot_03",
+                name="jetbot_03",
+                 position=np.array([0.0, 1.0, 0.1]),
             )
         )
 
@@ -35,8 +54,13 @@ class HelloWorld(BaseSample):
     async def setup_post_load(self):
         self._world = self.get_world()
         self._jetbot_01 = self._world.scene.get_object("jetbot_01")
-        
+        self._jetbot_02 = self._world.scene.get_object("jetbot_02")
+        self._jetbot_03 = self._world.scene.get_object("jetbot_03")
+
         self._jetbot_01_articulation_controller = self._jetbot_01.get_articulation_controller()
+        self._jetbot_02_articulation_controller = self._jetbot_02.get_articulation_controller()
+        self._jetbot_03_articulation_controller = self._jetbot_03.get_articulation_controller()
+
         self._world.add_physics_callback("sending_actions", callback_fn=self.send_robot_actions)
         return
     
@@ -45,7 +69,23 @@ class HelloWorld(BaseSample):
             ArticulationAction(
                 joint_positions=None,
                 joint_efforts=None,
+                joint_velocities=np.array([7, 8])
+            )
+        )
+
+        self._jetbot_02_articulation_controller.apply_action(
+            ArticulationAction(
+                joint_positions=None,
+                joint_efforts=None,
                 joint_velocities=np.array([5, 5])
+            )
+        )
+
+        self._jetbot_03_articulation_controller.apply_action(
+            ArticulationAction(
+                joint_positions=None,
+                joint_efforts=None,
+                joint_velocities=np.array([8, 7])
             )
         )
 
