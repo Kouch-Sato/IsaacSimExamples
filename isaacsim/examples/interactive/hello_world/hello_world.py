@@ -35,13 +35,16 @@ class HelloWorld(BaseSample):
     async def setup_post_load(self):
         self._world = self.get_world()
         self._cube = self._world.scene.get_object("fancy_cube")
+        self._world.add_physics_callback("sim_step", callback_fn=self.print_cube_info)  
+        return
+    
+    def print_cube_info(self, step_size):
         position, orientation = self._cube.get_world_pose()
         linear_velocity = self._cube.get_linear_velocity()
 
         print("Cube Position: " + str(position))
         print("Cube Orientation: " + str(orientation))
         print("Cube Linear Velocity: " + str(linear_velocity))
-        return
 
     async def setup_pre_reset(self):
         return
