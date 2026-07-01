@@ -1,15 +1,7 @@
-# Copyright (c) 2020-2024, NVIDIA CORPORATION. All rights reserved.
-#
-# NVIDIA CORPORATION and its licensors retain all intellectual property
-# and proprietary rights in and to this software, related documentation
-# and any modifications thereto. Any use, reproduction, disclosure or
-# distribution of this software and related documentation without an express
-# license agreement from NVIDIA CORPORATION is strictly prohibited.
-#
-
 from isaacsim.examples.interactive.base_sample import BaseSample
-import numpy as np
-from isaacsim.core.api.objects import DynamicCuboid
+from isaacsim.core.utils.nucleus import get_assets_root_path
+from isaacsim.core.utils.stage import add_reference_to_stage
+from isaacsim.core.api.robots import Robot
 import carb
 
 class HelloWorld(BaseSample):
@@ -21,30 +13,31 @@ class HelloWorld(BaseSample):
         world = self.get_world()
         world.scene.add_default_ground_plane()
 
-        fancy_cube = world.scene.add(
-            DynamicCuboid(
-                prim_path="/World/fancy_cube",
-                name="fancy_cube",
-                position=np.array([0.0, 0.0, 1.0]),
-                scale= np.array([0.5, 0.5, 0.5]),
-                color=np.array([1.0, 0.0, 0.0]),
+        assets_root_path = get_assets_root_path()
+        if assets_root_path is None:
+            carb.log_error("assets_root_pathがないよ！")
+            return
+            
+        asset_path = assets_root_path + "/Isaac/Robots/Jetbot/jetbot.usd"
+        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_01")
+
+        jetbot_01 = world.scene.add(
+            Robot(
+                prim_path="/World/jetbot_01",
+                name="jetbot_01",
             )
         )
+
+        print(str(jetbot_01.num_dof))
         return
 
     async def setup_post_load(self):
         self._world = self.get_world()
-        self._cube = self._world.scene.get_object("fancy_cube")
-        self._world.add_physics_callback("sim_step", callback_fn=self.print_cube_info)  
+        self._jetbot_01 = self._world.scene.get_object("jetbot_01")
+        
+        print(str(self._jetbot_01.num_dof))
+        print(str(self._jetbot_01.get_joint_positions()))
         return
-    
-    def print_cube_info(self, step_size):
-        position, orientation = self._cube.get_world_pose()
-        linear_velocity = self._cube.get_linear_velocity()
-
-        print("Cube Position: " + str(position))
-        print("Cube Orientation: " + str(orientation))
-        print("Cube Linear Velocity: " + str(linear_velocity))
 
     async def setup_pre_reset(self):
         return
