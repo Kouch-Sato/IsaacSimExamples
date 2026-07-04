@@ -9,7 +9,7 @@ from isaacsim.core.api.robots import Robot
 import numpy as np
 import carb
 
-class HelloWorld(BaseSample):
+class MyHelloWorld01(BaseSample):
     def __init__(self) -> None:
         super().__init__()
         return
