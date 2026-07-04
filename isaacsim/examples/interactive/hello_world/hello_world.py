@@ -1,8 +1,14 @@
+import array
+
 from isaacsim.examples.interactive.base_sample import BaseSample
 from isaacsim.core.utils.types import ArticulationAction
 from isaacsim.core.utils.nucleus import get_assets_root_path
-from isaacsim.core.utils.stage import add_reference_to_stage
-from isaacsim.core.api.robots import Robot
+from isaacsim.core.api.controllers import BaseController
+from isaacsim.robot.wheeled_robots.robots import WheeledRobot
+from isaacsim.robot.wheeled_robots.controllers.wheel_base_pose_controller import WheelBasePoseController
+from isaacsim.robot.wheeled_robots.controllers.differential_controller import DifferentialController
+from isaacsim.robot.manipulators.examples.franka.tasks import PickPlace
+from isaacsim.robot.manipulators.examples.franka.controllers import PickPlaceController
 import numpy as np
 import carb
 
@@ -13,86 +19,57 @@ class HelloWorld(BaseSample):
 
     def setup_scene(self):
         world = self.get_world()
-        world.scene.add_default_ground_plane()
-
-        assets_root_path = get_assets_root_path()
-        if assets_root_path is None:
-            carb.log_error("assets_root_pathがないよ！")
-            return
-            
-        asset_path = assets_root_path + "/Isaac/Robots/Jetbot/jetbot.usd"
-        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_01")
-        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_02")
-        add_reference_to_stage(usd_path=asset_path, prim_path="/World/jetbot_03")
-
-        jetbot_01 = world.scene.add(
-            Robot(
-                prim_path="/World/jetbot_01",
-                name="jetbot_01",
-                position=np.array([0.0, -1.0, 0.1]),
-            )
-        )
-
-        jetbot_02 = world.scene.add(
-            Robot(
-                prim_path="/World/jetbot_02",
-                name="jetbot_02",
-                position=np.array([0.0, 0.0, 0.1]),
-            )
-        )
-
-        jetbot_03 = world.scene.add(
-            Robot(
-                prim_path="/World/jetbot_03",
-                name="jetbot_03",
-                 position=np.array([0.0, 1.0, 0.1]),
-            )
-        )
-
+        world.add_task(PickPlace(name="my_task"))
         return
 
     async def setup_post_load(self):
         self._world = self.get_world()
-        self._jetbot_01 = self._world.scene.get_object("jetbot_01")
-        self._jetbot_02 = self._world.scene.get_object("jetbot_02")
-        self._jetbot_03 = self._world.scene.get_object("jetbot_03")
+        task_params = self._world.get_task("my_task").get_params()
 
-        self._jetbot_01_articulation_controller = self._jetbot_01.get_articulation_controller()
-        self._jetbot_02_articulation_controller = self._jetbot_02.get_articulation_controller()
-        self._jetbot_03_articulation_controller = self._jetbot_03.get_articulation_controller()
+        # task_paramsの中身
+        # {
+        #     'cube_position':  {'value': array([0.3, 0.3, 0.3], dtype=float32), 'modifiable': True}, 
+        #     'cube_orientation': {'value': array([1., 0., 0., 0.], dtype=float32), 'modifiable': True},
+        #     'target_position': {'value': array([-0.3    , -0.3    ,  0.02575]), 'modifiable': True},
+        #     'cube_name': {'value': 'cube', 'modifiable': False}, 
+        #     'robot_name': {'value': 'my_franka', 'modifiable': False}
+        # }
 
-        self._world.add_physics_callback("sending_actions", callback_fn=self.send_robot_actions)
+        self._franka = self._world.scene.get_object(task_params["robot_name"]["value"])
+        self._cube = self._world.scene.get_object(task_params["cube_name"]["value"])
+        self._controller = PickPlaceController(
+            name="my_controller",
+            gripper=self._franka.gripper,
+            robot_articulation=self._franka,
+        )
+        self._world.add_physics_callback("sending_actions", callback_fn=self.physics_step)
+        await self._world.play_async()
+        return
+    
+    async def setup_post_reset(self):
+        self._controller.reset()
+        await self._world.play_async()
+        return
+    
+    def physics_step(self, step_size):
+        current_observations = self._world.get_observations()
+
+        actions = self._controller.forward(
+            picking_position=current_observations[self._cube.name]["position"],
+            placing_position=current_observations[self._cube.name]["target_position"],
+            current_joint_positions=current_observations[self._franka.name]["joint_positions"],
+        )
+
+        self._franka.apply_action(actions)
+
+        if self._controller.is_done():
+            self._world.pause()
         return
     
     def send_robot_actions(self, step_size):
-        self._jetbot_01_articulation_controller.apply_action(
-            ArticulationAction(
-                joint_positions=None,
-                joint_efforts=None,
-                joint_velocities=np.array([7, 8])
-            )
-        )
-
-        self._jetbot_02_articulation_controller.apply_action(
-            ArticulationAction(
-                joint_positions=None,
-                joint_efforts=None,
-                joint_velocities=np.array([5, 5])
-            )
-        )
-
-        self._jetbot_03_articulation_controller.apply_action(
-            ArticulationAction(
-                joint_positions=None,
-                joint_efforts=None,
-                joint_velocities=np.array([8, 7])
-            )
-        )
-
+        return  
+        
     async def setup_pre_reset(self):
-        return
-
-    async def setup_post_reset(self):
         return
 
     def world_cleanup(self):
