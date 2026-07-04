@@ -11,7 +11,7 @@ from isaacsim.robot.wheeled_robots.controllers.differential_controller import Di
 import numpy as np
 import carb
 
-class HelloWorld(BaseSample):
+class MyHelloWorld02(BaseSample):
     def __init__(self) -> None:
         super().__init__()
         return
