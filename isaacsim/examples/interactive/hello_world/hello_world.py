@@ -19,7 +19,10 @@ class HelloWorld(BaseSample):
 
     def setup_scene(self):
         world = self.get_world()
-        world.add_task(PickPlace(name="my_task"))
+        world.add_task(PickPlace(
+            name="my_task",
+            cube_initial_position=np.array([-0.3, 0.2, 0.26])
+        ))
         return
 
     async def setup_post_load(self):
