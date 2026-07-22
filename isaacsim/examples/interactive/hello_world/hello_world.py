@@ -1,3 +1,4 @@
+# Frankaロボットで動かすチュートリアルをやっている
 import array
 
 from isaacsim.examples.interactive.base_sample import BaseSample
