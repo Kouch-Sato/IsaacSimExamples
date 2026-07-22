@@ -12,17 +12,13 @@ from isaacsim.robot.manipulators.examples.franka.controllers import PickPlaceCon
 import numpy as np
 import carb
 
-class HelloWorld(BaseSample):
+class SO101PickPlace(BaseSample):
     def __init__(self) -> None:
         super().__init__()
         return
 
     def setup_scene(self):
         world = self.get_world()
-        world.add_task(PickPlace(
-            name="my_task",
-            cube_initial_position=np.array([-0.3, 0.2, 0.26])
-        ))
         return
 
     async def setup_post_load(self):

@@ -12,21 +12,21 @@ import os
 import omni.ext
 from isaacsim.examples.browser import get_instance as get_browser_instance
 from isaacsim.examples.interactive.base_sample import BaseSampleUITemplate
-from isaacsim.examples.interactive.hello_world import HelloWorld
+from isaacsim.examples.interactive.user_examples import SO101PickPlace
 
 
-class HelloWorldExtension(omni.ext.IExt):
+class SO101PickPlaceExtension(omni.ext.IExt):
     def on_startup(self, ext_id: str):
-        self.example_name = "Hello World"
-        self.category = "General"
+        self.example_name = "SO101 Pick Place"
+        self.category = "Kouch_Examples"
 
         ui_kwargs = {
             "ext_id": ext_id,
             "file_path": os.path.abspath(__file__),
-            "title": "Hello World Example",
+            "title": "SO101 Pick Place",
             "doc_link": "https://docs.isaacsim.omniverse.nvidia.com/latest/core_api_tutorials/tutorial_core_hello_world.html",
             "overview": "This Example introduces the user on how to do cool stuff with Isaac Sim through scripting in asynchronous mode.",
-            "sample": HelloWorld(),
+            "sample": SO101PickPlace(),
         }
 
         ui_handle = BaseSampleUITemplate(**ui_kwargs)

@@ -8,3 +8,6 @@
 #
 
 # NOTE: Import here your extension examples to be propagated to ISAAC SIM Extensions startup
+
+from isaacsim.examples.interactive.user_examples.so101_pick_place import SO101PickPlace
+from isaacsim.examples.interactive.user_examples.so101_pick_place_extension import SO101PickPlaceExtension
