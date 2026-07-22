@@ -13,7 +13,6 @@ import carb
 class SO101PickPlace(BaseSample):
     def __init__(self) -> None:
         super().__init__()
-        return
 
     def setup_scene(self):
         world = self.get_world()
@@ -44,7 +43,6 @@ class SO101PickPlace(BaseSample):
                 name = "so101"
             )
         )
-        return
 
     async def setup_post_load(self):
         self._world = self.get_world()
@@ -58,22 +56,13 @@ class SO101PickPlace(BaseSample):
             "so101_test",
             callback_fn = self.physics_step
         )
-        
-        return
     
     async def setup_post_reset(self):
-        self._controller.reset()
+        self._time = 0.0
         await self._world.play_async()
-        return
     
     def physics_step(self, step_size):
-        action = ArticulationAction(
-            joint_positions = np.array([0.5]),
-            joint_indices = np.array([5]),
-        )
-                
-        self._articulation_controller.apply_action(action)
-        return
+        self.open_gripper()
     
     def send_robot_actions(self, step_size):
         return  
@@ -83,3 +72,19 @@ class SO101PickPlace(BaseSample):
 
     def world_cleanup(self):
         return
+    
+    def open_gripper(self):
+        action = ArticulationAction(
+            joint_positions = np.array([0.5]),
+            joint_indices = np.array([5]),
+        )
+                
+        self._articulation_controller.apply_action(action)
+
+    def close_gripper(self):
+        action = ArticulationAction(
+            joint_positions = np.array([0]),
+            joint_indices = np.array([5]),
+        )
+                
+        self._articulation_controller.apply_action(action)
