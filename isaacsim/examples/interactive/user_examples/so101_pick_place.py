@@ -1,14 +1,11 @@
 import array
 
 from isaacsim.examples.interactive.base_sample import BaseSample
+from isaacsim.core.prims import SingleArticulation
 from isaacsim.core.utils.types import ArticulationAction
-from isaacsim.core.utils.nucleus import get_assets_root_path
+from isaacsim.core.utils.stage import add_reference_to_stage
 from isaacsim.core.api.controllers import BaseController
-from isaacsim.robot.wheeled_robots.robots import WheeledRobot
-from isaacsim.robot.wheeled_robots.controllers.wheel_base_pose_controller import WheelBasePoseController
-from isaacsim.robot.wheeled_robots.controllers.differential_controller import DifferentialController
-from isaacsim.robot.manipulators.examples.franka.tasks import PickPlace
-from isaacsim.robot.manipulators.examples.franka.controllers import PickPlaceController
+from isaacsim.core.api.objects.ground_plane import GroundPlane
 import numpy as np
 import carb
 
@@ -19,30 +16,37 @@ class SO101PickPlace(BaseSample):
 
     def setup_scene(self):
         world = self.get_world()
+        world.scene.add_default_ground_plane()
+
+        usd_path = r"C:/Users/USER/Documents/kouch_projects/SO-ARM100/Simulation/SO101/so101_new_calib/so101_new_calib.usd"
+        prim_path = "/World/SO101"
+
+        add_reference_to_stage(
+            usd_path = usd_path,
+            prim_path = prim_path
+        )
+
+        self._so101 = world.scene.add(
+            SingleArticulation(
+                prim_path = prim_path,
+                name = "so101"
+            )
+        )
         return
 
     async def setup_post_load(self):
         self._world = self.get_world()
-        task_params = self._world.get_task("my_task").get_params()
+        await self._world.reset_async()
 
-        # task_paramsの中身
-        # {
-        #     'cube_position':  {'value': array([0.3, 0.3, 0.3], dtype=float32), 'modifiable': True}, 
-        #     'cube_orientation': {'value': array([1., 0., 0., 0.], dtype=float32), 'modifiable': True},
-        #     'target_position': {'value': array([-0.3    , -0.3    ,  0.02575]), 'modifiable': True},
-        #     'cube_name': {'value': 'cube', 'modifiable': False}, 
-        #     'robot_name': {'value': 'my_franka', 'modifiable': False}
-        # }
-
-        self._franka = self._world.scene.get_object(task_params["robot_name"]["value"])
-        self._cube = self._world.scene.get_object(task_params["cube_name"]["value"])
-        self._controller = PickPlaceController(
-            name="my_controller",
-            gripper=self._franka.gripper,
-            robot_articulation=self._franka,
+        self._articulation_controller = (
+            self._so101.get_articulation_controller()
         )
-        self._world.add_physics_callback("sending_actions", callback_fn=self.physics_step)
-        await self._world.play_async()
+
+        self._world.add_physics_callback(
+            "so101_test",
+            callback_fn = self.physics_step
+        )
+        
         return
     
     async def setup_post_reset(self):
@@ -51,18 +55,12 @@ class SO101PickPlace(BaseSample):
         return
     
     def physics_step(self, step_size):
-        current_observations = self._world.get_observations()
-
-        actions = self._controller.forward(
-            picking_position=current_observations[self._cube.name]["position"],
-            placing_position=current_observations[self._cube.name]["target_position"],
-            current_joint_positions=current_observations[self._franka.name]["joint_positions"],
+        action = ArticulationAction(
+            joint_positions = np.array([0.2]),
+            joint_indices = np.array([0])
         )
-
-        self._franka.apply_action(actions)
-
-        if self._controller.is_done():
-            self._world.pause()
+        
+        self._articulation_controller.apply_action(action)
         return
     
     def send_robot_actions(self, step_size):
