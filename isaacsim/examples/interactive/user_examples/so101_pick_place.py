@@ -6,6 +6,7 @@ from isaacsim.core.utils.types import ArticulationAction
 from isaacsim.core.utils.stage import add_reference_to_stage
 from isaacsim.core.api.controllers import BaseController
 from isaacsim.core.api.objects.ground_plane import GroundPlane
+from isaacsim.core.api.objects import DynamicCuboid
 import numpy as np
 import carb
 
@@ -17,6 +18,17 @@ class SO101PickPlace(BaseSample):
     def setup_scene(self):
         world = self.get_world()
         world.scene.add_default_ground_plane()
+
+        self._cube = world.scene.add(
+            DynamicCuboid(
+                prim_path = "/World/Cube",
+                name = "cube",
+                position = np.array([0.20, 0.0, 0.015]),
+                scale = np.array([0.03, 0.03, 0.03]),
+                color = np.array([0.0, 0.2, 1.0]),
+                mass = 0.02
+            )
+        )
 
         usd_path = r"C:/Users/USER/Documents/kouch_projects/SO-ARM100/Simulation/SO101/so101_new_calib/so101_new_calib.usd"
         prim_path = "/World/SO101"
@@ -56,10 +68,10 @@ class SO101PickPlace(BaseSample):
     
     def physics_step(self, step_size):
         action = ArticulationAction(
-            joint_positions = np.array([0.2]),
-            joint_indices = np.array([0])
+            joint_positions = np.array([0.5]),
+            joint_indices = np.array([5]),
         )
-        
+                
         self._articulation_controller.apply_action(action)
         return
     
