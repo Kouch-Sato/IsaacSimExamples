@@ -10,6 +10,8 @@ from isaacsim.core.api.objects import DynamicCuboid
 import numpy as np
 import carb
 
+SO101_PARENT_PATH = r"C:/Users/USER/Documents/kouch_projects/SO-ARM100/Simulation/SO101"
+
 class SO101PickPlace(BaseSample):
     def __init__(self) -> None:
         super().__init__()
@@ -29,7 +31,7 @@ class SO101PickPlace(BaseSample):
             )
         )
 
-        usd_path = r"C:/Users/USER/Documents/kouch_projects/SO-ARM100/Simulation/SO101/so101_new_calib/so101_new_calib.usd"
+        usd_path = SO101_PARENT_PATH + "/so101_new_calib/so101_new_calib.usd"
         prim_path = "/World/SO101"
 
         add_reference_to_stage(
