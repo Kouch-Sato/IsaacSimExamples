@@ -25,7 +25,7 @@ class SO101PickPlace(BaseSample):
             DynamicCuboid(
                 prim_path = "/World/Cube",
                 name = "cube",
-                position = np.array([0.20, 0.0, 0.015]),
+                position = np.array([0.25, 0.0, 0.015]),
                 scale = np.array([0.03, 0.03, 0.03]),
                 color = np.array([0.0, 0.2, 1.0]),
                 mass = 0.02
@@ -69,6 +69,15 @@ class SO101PickPlace(BaseSample):
             end_effector_frame_name = "gripper_frame_link"
         )
 
+        cube_position, cube_orientation = self._cube.get_world_pose()
+        target_position = cube_position + np.array([-0.02, 0.0, 0.05])
+
+        action, success = self._ik_solver.compute_inverse_kinematics(
+            target_position = target_position
+        )
+
+        self._articulation_controller.apply_action(action)
+
         self._world.add_physics_callback(
             "so101_test",
             callback_fn = self.physics_step
@@ -92,7 +101,7 @@ class SO101PickPlace(BaseSample):
     
     def open_gripper(self):
         action = ArticulationAction(
-            joint_positions = np.array([0.5]),
+            joint_positions = np.array([0.7]),
             joint_indices = np.array([5]),
         )
                 
