@@ -73,12 +73,6 @@ class SO101PickPlace(BaseSample):
         self._cube_position, cube_orientation = self._cube.get_world_pose()
         self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.05])
 
-        action, success = self._ik_solver.compute_inverse_kinematics(
-            target_position = self._target_position
-        )
-
-        self._articulation_controller.apply_action(action)
-
         self._world.add_physics_callback(
             "so101_test",
             callback_fn = self.physics_step
@@ -87,7 +81,8 @@ class SO101PickPlace(BaseSample):
     async def setup_post_reset(self):
         self._time = 0.0
         await self._world.play_async()
-    
+
+    # apply_actionするのは基本的にここ
     def physics_step(self, step_size):
         self.open_gripper()
 
@@ -95,12 +90,11 @@ class SO101PickPlace(BaseSample):
             self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.03])
             
             self._state = "descend"
+            print("apporachから次に進んだよ")
 
-        if self._state == "descend":
-            action, success = self._ik_solver.compute_inverse_kinematics(
-                target_position = self._target_position
-            )
-    
+        action = self.forward()
+
+        if action is not None:
             self._articulation_controller.apply_action(action)
 
     
@@ -135,3 +129,16 @@ class SO101PickPlace(BaseSample):
         distance = np.linalg.norm(current_position - self._target_position)
 
         return distance < tolerance
+
+    # ここでは目標座標からIKを解いてactionを出す
+    def forward(self):
+        action, success = self._ik_solver.compute_inverse_kinematics(
+            target_position = self._target_position
+        )
+
+        if not success:
+            print("actionが出せないよ")
+            return None
+        
+        return action   
+            
