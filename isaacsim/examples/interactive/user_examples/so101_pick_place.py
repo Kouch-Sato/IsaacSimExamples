@@ -7,6 +7,7 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 from isaacsim.core.api.controllers import BaseController
 from isaacsim.core.api.objects.ground_plane import GroundPlane
 from isaacsim.core.api.objects import DynamicCuboid
+from isaacsim.robot_motion.motion_generation import LulaKinematicsSolver, ArticulationKinematicsSolver
 import numpy as np
 import carb
 
@@ -52,6 +53,20 @@ class SO101PickPlace(BaseSample):
 
         self._articulation_controller = (
             self._so101.get_articulation_controller()
+        )
+
+        urdf_path = SO101_PARENT_PATH + "/so101_new_calib.urdf"
+        descripter_path = SO101_PARENT_PATH + "/so101_new_calib_descriptor.yaml"
+
+        self._lula_solver = LulaKinematicsSolver(
+            robot_description_path = descripter_path,
+            urdf_path = urdf_path
+        )
+
+        self._ik_solver = ArticulationKinematicsSolver(
+            robot_articulation = self._so101,
+            kinematics_solver = self._lula_solver,
+            end_effector_frame_name = "gripper_frame_link"
         )
 
         self._world.add_physics_callback(
