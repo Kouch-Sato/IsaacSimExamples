@@ -16,6 +16,7 @@ SO101_PARENT_PATH = r"C:/Users/USER/Documents/kouch_projects/SO-ARM100/Simulatio
 class SO101PickPlace(BaseSample):
     def __init__(self) -> None:
         super().__init__()
+        self._state = "approach"
 
     def setup_scene(self):
         world = self.get_world()
@@ -69,8 +70,8 @@ class SO101PickPlace(BaseSample):
             end_effector_frame_name = "gripper_frame_link"
         )
 
-        cube_position, cube_orientation = self._cube.get_world_pose()
-        self._target_position = cube_position + np.array([-0.02, 0.0, 0.05])
+        self._cube_position, cube_orientation = self._cube.get_world_pose()
+        self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.05])
 
         action, success = self._ik_solver.compute_inverse_kinematics(
             target_position = self._target_position
@@ -90,8 +91,18 @@ class SO101PickPlace(BaseSample):
     def physics_step(self, step_size):
         self.open_gripper()
 
-        if self.has_reached_positon(self._target_position):
-            print("ついたよ！！")
+        if self._state == "approach" and self.has_reached_positon():
+            self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.03])
+            
+            self._state = "descend"
+
+        if self._state == "descend":
+            action, success = self._ik_solver.compute_inverse_kinematics(
+                target_position = self._target_position
+            )
+    
+            self._articulation_controller.apply_action(action)
+
     
     def send_robot_actions(self, step_size):
         return  
@@ -118,11 +129,9 @@ class SO101PickPlace(BaseSample):
                 
         self._articulation_controller.apply_action(action)
 
-    def has_reached_positon(self, target_position, tolerance = 0.01):
+    def has_reached_positon(self, tolerance = 0.01):
         current_position, _ = self._ik_solver.compute_end_effector_pose()
 
-        distance = np.linalg.norm(current_position - target_position)
-
-        print("今は", distance)
+        distance = np.linalg.norm(current_position - self._target_position)
 
         return distance < tolerance
