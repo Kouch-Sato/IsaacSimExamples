@@ -57,6 +57,23 @@ class SO101PickPlace(BaseSample):
         self._world = self.get_world()
         await self._world.reset_async()
 
+        self._home_joint_positions = np.array([
+            0.0,
+            -1.74533,
+            1.65632,
+            0.98262,
+            0.0,
+            0.0,
+        ])
+
+        self._so101.set_joints_default_state(
+            positions = self._home_joint_positions,
+            velocities = np.zeros(6)
+        )
+
+        self._so101.set_joint_positions(self._home_joint_positions)
+        self._so101.set_joint_velocities(np.zeros(6))
+
         self._articulation_controller = (
             self._so101.get_articulation_controller()
         )
@@ -111,7 +128,7 @@ class SO101PickPlace(BaseSample):
             self._state = "descend"
             print("apporachから次に進んだよ")
 
-        action = self.forward()
+        action = self.forward(step_size)
 
         if action is not None:
             self._articulation_controller.apply_action(action)
@@ -150,14 +167,12 @@ class SO101PickPlace(BaseSample):
         return distance < tolerance
 
     # ここでは目標座標からIKを解いてactionを出す
-    def forward(self):
-        action, success = self._ik_solver.compute_inverse_kinematics(
+    def forward(self, step_size):
+        self._rmpflow.set_end_effector_target(
             target_position = self._target_position
         )
 
-        if not success:
-            print("actionが出せないよ")
-            return None
+        action = self._articulation_motion_policy.get_next_articulation_action(step_size)
         
         return action   
             
