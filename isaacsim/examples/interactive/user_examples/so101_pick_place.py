@@ -70,10 +70,10 @@ class SO101PickPlace(BaseSample):
         )
 
         cube_position, cube_orientation = self._cube.get_world_pose()
-        target_position = cube_position + np.array([-0.02, 0.0, 0.05])
+        self._target_position = cube_position + np.array([-0.02, 0.0, 0.05])
 
         action, success = self._ik_solver.compute_inverse_kinematics(
-            target_position = target_position
+            target_position = self._target_position
         )
 
         self._articulation_controller.apply_action(action)
@@ -89,6 +89,9 @@ class SO101PickPlace(BaseSample):
     
     def physics_step(self, step_size):
         self.open_gripper()
+
+        if self.has_reached_positon(self._target_position):
+            print("ついたよ！！")
     
     def send_robot_actions(self, step_size):
         return  
@@ -114,3 +117,12 @@ class SO101PickPlace(BaseSample):
         )
                 
         self._articulation_controller.apply_action(action)
+
+    def has_reached_positon(self, target_position, tolerance = 0.01):
+        current_position, _ = self._ik_solver.compute_end_effector_pose()
+
+        distance = np.linalg.norm(current_position - target_position)
+
+        print("今は", distance)
+
+        return distance < tolerance
