@@ -9,9 +9,7 @@ from isaacsim.core.api.objects.ground_plane import GroundPlane
 from isaacsim.core.api.objects import DynamicCuboid
 from isaacsim.robot_motion.motion_generation import (
     LulaKinematicsSolver, 
-    ArticulationKinematicsSolver,
-    ArticulationMotionPolicy,
-    RmpFlow,
+    ArticulationKinematicsSolver
 )
 import numpy as np
 import carb
@@ -80,7 +78,6 @@ class SO101PickPlace(BaseSample):
 
         urdf_path = SO101_PARENT_PATH + "/so101_new_calib.urdf"
         descripter_path = SO101_PARENT_PATH + "/so101_new_calib_descriptor.yaml"
-        rmpflow_config_path = SO101_PARENT_PATH + "/so101_rmpflow_config.yaml"
 
         self._lula_solver = LulaKinematicsSolver(
             robot_description_path = descripter_path,
@@ -93,29 +90,9 @@ class SO101PickPlace(BaseSample):
             end_effector_frame_name = "gripper_frame_link"
         )
 
-        self._rmpflow = RmpFlow(
-            robot_description_path = descripter_path,
-            urdf_path = urdf_path,
-            rmpflow_config_path = rmpflow_config_path,
-            end_effector_frame_name = "gripper_frame_link",
-            maximum_substep_size = 0.00334,
-        )
-
         so101_base_position, so101_base_orientation = self._so101.get_world_pose()
         self._cube_position, cube_orientation = self._cube.get_world_pose()
         self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.08])
-
-        self._rmpflow.reset()
-
-        self._rmpflow.set_robot_base_pose(
-            robot_position = so101_base_position,
-            robot_orientation = so101_base_orientation
-        )
-
-        self._articulation_motion_policy = ArticulationMotionPolicy(
-            self._so101,
-            self._rmpflow
-        )
 
         self._world.add_physics_callback(
             "so101_test",
@@ -137,10 +114,8 @@ class SO101PickPlace(BaseSample):
         #     print("apporachから次に進んだよ")
 
         action = self.forward(step_size)
-
         if action is not None:
             self._articulation_controller.apply_action(action)
-
     
     def send_robot_actions(self, step_size):
         return  
@@ -176,11 +151,9 @@ class SO101PickPlace(BaseSample):
 
     # ここでは目標座標からIKを解いてactionを出す
     def forward(self, step_size):
-        self._rmpflow.set_end_effector_target(
+        action, success = self._ik_solver.compute_inverse_kinematics(
             target_position = self._target_position
         )
-
-        action = self._articulation_motion_policy.get_next_articulation_action(step_size)
         
         return action   
             
