@@ -101,13 +101,21 @@ class SO101PickPlace(BaseSample):
             maximum_substep_size = 0.00334,
         )
 
+        so101_base_position, so101_base_orientation = self._so101.get_world_pose()
+        self._cube_position, cube_orientation = self._cube.get_world_pose()
+        self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.08])
+
+        self._rmpflow.reset()
+
+        self._rmpflow.set_robot_base_pose(
+            robot_position = so101_base_position,
+            robot_orientation = so101_base_orientation
+        )
+
         self._articulation_motion_policy = ArticulationMotionPolicy(
             self._so101,
             self._rmpflow
         )
-
-        self._cube_position, cube_orientation = self._cube.get_world_pose()
-        self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.05])
 
         self._world.add_physics_callback(
             "so101_test",
@@ -122,11 +130,11 @@ class SO101PickPlace(BaseSample):
     def physics_step(self, step_size):
         self.open_gripper()
 
-        if self._state == "approach" and self.has_reached_positon():
-            self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.03])
+        # if self._state == "approach" and self.has_reached_positon():
+        #     self._target_position = self._cube_position + np.array([-0.02, 0.0, 0.03])
             
-            self._state = "descend"
-            print("apporachから次に進んだよ")
+        #     self._state = "descend"
+        #     print("apporachから次に進んだよ")
 
         action = self.forward(step_size)
 
